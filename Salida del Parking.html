@@ -1,0 +1,873 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Salida del Parking</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=Nunito:wght@600;800&display=swap">
+<style>
+/* Layout: pantalla única de juego móvil. Cabecera con el selector de nivel, el garaje en canvas ocupa el resto y los controles van abajo. */
+:root {
+  --bg: #12141f;
+  --panel: #1d2132;
+  --line: #333952;
+  --fg: #eef0f7;
+  --muted: #9aa2bd;
+  --accent: #ffc21a;
+  --accent-ink: #1c1300;
+  --good: #4cdf8a;
+  --focus: #8fd3ff;
+  --font-display: "Silkscreen", "Courier New", ui-monospace, monospace;
+  --font-body: "Nunito", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.4;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 12px 14px;
+}
+.app {
+  height: 100%;
+  min-height: 540px;
+  max-width: 600px;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.6rem;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-transform: uppercase;
+}
+.levelnav { display: flex; align-items: center; gap: 6px; }
+.levelname { font-family: var(--font-display); font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase; min-width: 7.5ch; text-align: center; }
+.stats { display: flex; gap: 22px; flex-wrap: wrap; }
+.stat { display: grid; gap: 0; min-width: 0; }
+.stat-label { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.stat-value { font-family: var(--font-display); font-weight: 700; font-size: 1.25rem; font-variant-numeric: tabular-nums; }
+
+.stage { position: relative; flex: 1 1 auto; min-height: 260px; min-width: 0; }
+canvas {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: block; touch-action: none; user-select: none; -webkit-user-select: none; cursor: grab;
+}
+canvas.dragging { cursor: grabbing; }
+canvas:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+.status { margin: 0; min-height: 2.8em; color: var(--muted); font-size: 0.9rem; }
+.status strong { color: var(--fg); font-weight: 800; }
+
+.controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.controls button:not(.primary) { flex: 1 1 0; }
+button {
+  font: inherit;
+  color: var(--fg);
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  background: var(--panel);
+  border-radius: 8px;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { border-color: var(--muted); }
+button:disabled { opacity: 0.35; cursor: default; }
+button:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: #d99e00; font-weight: 700; flex: 1 1 100%; }
+button.primary:hover:not(:disabled) { border-color: var(--fg); }
+button.step { width: 40px; min-height: 40px; padding: 0; font-size: 1.1rem; line-height: 1; }
+
+.loading {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1;
+  padding: 10px 16px; border-radius: 8px; background: var(--panel); border: 2px solid var(--line);
+  font-family: var(--font-display); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.loading[hidden] { display: none; }
+.help { margin: 0; color: var(--muted); font-size: 0.8rem; }
+kbd {
+  font-family: var(--font-display); font-size: 0.65rem; padding: 1px 5px; border: 1px solid var(--line);
+  border-bottom-width: 2px; border-radius: 4px; background: var(--panel); color: var(--fg);
+}
+</style>
+
+<main class="app">
+  <header>
+    <h1>Parking</h1>
+    <div class="levelnav">
+      <button class="step" id="prev" type="button" aria-label="Nivel anterior">&lsaquo;</button>
+      <span class="levelname" id="levelname" aria-live="polite">Nivel 1</span>
+      <button class="step" id="next" type="button" aria-label="Nivel siguiente">&rsaquo;</button>
+    </div>
+  </header>
+
+  <section class="stats" aria-label="Estado de la partida">
+    <div class="stat"><span class="stat-label">Movimientos</span><span class="stat-value" id="moves">0</span></div>
+    <div class="stat"><span class="stat-label">Par</span><span class="stat-value" id="par">0</span></div>
+  </section>
+
+  <section class="stage" id="stage">
+    <canvas id="board" tabindex="0" role="img" aria-label="Garaje con coches. Arrastra un coche por su eje, o toca uno y usa las flechas del teclado. El coche rojo debe salir por la derecha."></canvas>
+    <div class="loading" id="loading" hidden>Generando nivel…</div>
+  </section>
+
+  <p class="status" id="status" role="status" aria-live="polite"></p>
+
+  <div class="controls">
+    <button id="nextLevel" class="primary" type="button" hidden>Siguiente nivel</button>
+    <button id="undo" type="button">Deshacer</button>
+    <button id="restart" type="button">Reiniciar</button>
+    <button id="hint" type="button">Pista</button>
+  </div>
+  <p class="help">Arrastra un coche por su eje, o toca uno y usa <kbd>←</kbd><kbd>↑</kbd><kbd>→</kbd><kbd>↓</kbd>. <kbd>C</kbd> cambia de coche, <kbd>Z</kbd> deshace, <kbd>R</kbd> reinicia, <kbd>H</kbd> da una pista.</p>
+</main>
+
+<script>
+//#CORE-START
+// Búsqueda en anchura: devuelve los movimientos mínimos hasta que el coche rojo llega a la puerta
+// (d), y el primer movimiento de una solución óptima. cs es una lista de [orientación, largo, fila o columna, posición].
+function bfsSolve(n, cs, cap) {
+  var gate = n - 2, m = cs.length;
+  var mult = new Array(m), k0 = 0, i, j, k;
+  for (i = m - 1, k = 1; i >= 0; i--, k *= n) mult[i] = k;
+  for (i = 0; i < m; i++) k0 += cs[i][3] * mult[i];
+  var keys = [k0], par = [-1], mvI = [-1], mvTo = [-1], dep = [0];
+  var seen = new Map(); seen.set(k0, 0);
+  var p = new Array(m), g = new Uint8Array(n * n);
+  for (var qi = 0; qi < keys.length; qi++) {
+    var key = keys[qi], t = key;
+    for (i = m - 1; i >= 0; i--) { p[i] = t % n; t = (t - p[i]) / n; }
+    if (p[0] === gate) {
+      var idx = qi, first = -1;
+      while (par[idx] !== -1) { first = idx; idx = par[idx]; }
+      return { d: dep[qi], i: first < 0 ? -1 : mvI[first], to: first < 0 ? -1 : mvTo[first] };
+    }
+    g.fill(0);
+    for (i = 0; i < m; i++) {
+      var o = cs[i][0], f = cs[i][2];
+      for (k = 0; k < cs[i][1]; k++) g[o === "h" ? f * n + p[i] + k : (p[i] + k) * n + f] = 1;
+    }
+    for (j = 0; j < m; j++) {
+      var c = cs[j], horiz = c[0] === "h", len = c[1], fx = c[2];
+      for (var dir = -1; dir <= 1; dir += 2) {
+        var x = p[j];
+        for (;;) {
+          var edge = dir < 0 ? x - 1 : x + len;
+          if (edge < 0 || edge >= n) break;
+          if (g[horiz ? fx * n + edge : edge * n + fx]) break;
+          x += dir;
+          var nk = key + (x - p[j]) * mult[j];
+          if (!seen.has(nk)) {
+            seen.set(nk, keys.length);
+            keys.push(nk); par.push(qi); mvI.push(j); mvTo.push(x); dep.push(dep[qi] + 1);
+          }
+        }
+      }
+    }
+    if (keys.length > cap) return null;
+  }
+  return null;
+}
+
+// Biblioteca de garajes 6x6 elegidos por su dificultad: [distancia máxima a la salida, coches como orientación+largo+línea+posición].
+// Cada garaje ofrece muchas posiciones de partida, desde 1 movimiento hasta su distancia máxima.
+var LIB = [[14,"h221h251v204h202v233h310v353v223v231v202v340"],[14,"h220v234h244h200v313h310v251h234h204h254v241v223"],[14,"h220h212v224h232h210h250v213v254v241v251v234h200"],[14,"h220v320v351v214v240v210h353v231h232"],[14,"h221h251v204h203v234h312v353v223v232v201v343"],[14,"h220h204v322h243v220h253v241v213v353"],[14,"h222v200h240v254v323v233v244v230h214"],[14,"h221h251v204h204v233h310v353v223v231v202v342"],[15,"h223v320h233v351v313h204v200v230h244"],[15,"h220h253v242h230v214v254h313v321h200h243h204v204"],[15,"h222v312v253h211v233v223v251h352h201v341"],[15,"h220v250h241h251h301h353h311v233v204v200h244v252v242"],[15,"h223h342h332h254v211v350v320h213h250v200"],[15,"h221v220h254h350v230v352h241v302v210v233"],[15,"h220v254h330v251h200h210v230v220h242v214"],[15,"h220h233h350v200h241v234h214h301v222v231h230"],[16,"h221h242v231h244v241h252h210h232v351v213h203v220"],[16,"h220v234v242v244v213v223h350h200v232v221v203"],[16,"h220h350v251v343h210h231h213v221v253h242v203h200"],[16,"h222h200v251v323v234v254v212v240v220h233v203"],[16,"h221h300h240v234h313h231v201v352h233h254h204h211"],[16,"h222v214v251v234h234h301v211h232h244v241v301"],[16,"h221v220h254h350v230v352h241v302v210v232v241"],[16,"h220h300h210h343v230v250v224v242v252v213"],[17,"h221v233h240v201v323h200h214v244h302v252"],[17,"h223h234v251v333v204h213v312h251h203v222h200"],[17,"h221v232h240v202v323h200h212v244h302v254"],[17,"h220v322v351v214v241v210h353v230h233h204"],[17,"h220v240h230v320h210v250h242h353h234v230"],[17,"h220v320v351v214v241v210h353v230h233h204"],[17,"h220v321v351v214v241v210h353v231h233h204"],[17,"h223v223v220v213h250h210v350h254h343v230"],[18,"h220v340v231v221h231v250h233h243v254v210v224v200"],[18,"h220h340v221h330h200v353v242h210h303h251v234"],[18,"h222v223v220v213h254h210v351h252h343v230h200"],[18,"h220h340v221h330h201v353v242h213h303h251v234"],[18,"h220v340v230v222h230v251h234h243v254v214v224v200"],[18,"h220v240h330v200v254v243v221h340h201v234v252"],[18,"h222v201h200h254h204h230h332v351h250v220h242v241"],[18,"h220h350v242v320v231v233h200v353h241h231v244v250"],[19,"h221v220v254h253h303h350v252v201v331h230"],[19,"h222h200h210v223v234v242v254v220h303h240h250v251h230"],[19,"h220h233h350v200h241v234h214h302v222v231h230v252"],[19,"h221v300h343v230v223v350h230h240h251h201v241"],[19,"h220h242v231h244v240h201h210v350v213h250v221"],[19,"h222h200h210v224v234v242v254v220h303h240v252h232"],[19,"h222h202v240h353h200v323h343h211v212v202v350v214"],[19,"h221v223v254h253h302h350v252v201v332h230"],[20,"h220v223v220v213h250h210v351h252h343v241h203"],[20,"h221v223v220v213h254h210v351h252h343v241h203"],[20,"h220v353h241v234v221h350v243v210v231h203"],[20,"h221v220v254h253h303h350v251v203v332h231h213"],[20,"h220v353h241v234v221h350v243v210v232h204"],[20,"h222h214v224v233v242v254v220h303h240v252h231"],[20,"h221v220h253h350v230v351h242v302v213v232v243v241"],[20,"h222v223v220v213h250h210v351h252h343v241h203"],[21,"h223v320v350v211v240v234h350v230h231h200v203"],[21,"h223v321v353v211v244v234h350v230h233h200v202"],[21,"h223v320v350v211v240v234h350v230h232h200v203"],[21,"h223v322v352v211v240v234h350v230h233h200v203"],[21,"h223v320v351v211v240v234h350v230h232h200v202"],[21,"h223v320v353v211v240v234h350v230h231h200v203"],[21,"h223v320v351v211v240v234h350v230h232h200v203"],[21,"h223v321v352v211v240v234h350v230h233h200v201"],[22,"h220v342h204v210h240v254v321v251h202h252"],[22,"h220v342h300h242v214v221h230v250h232h254"],[22,"h222v340v234v220h232v250h234h254v230v214v204h200"],[22,"h221v340v233v220h231v251h234h252v230v214v204h200"],[22,"h221v251v231h234v214h244v223v233h210h353h201"],[22,"h220v251v231h234v214h244v223v233h210h353h201"],[22,"h223v221h240v202h342h210h253h204v230v353h233h231h350"],[22,"h223v343h204v210h242v254v321v251h202h250"],[23,"h222v220v213v230v250v223h233h343v240h210v202h251"],[23,"h220h303h211h230v331h200v222h352v204v251v253h243"],[23,"h223v220v214v230v251v223h234h343v240h210v203h253"],[23,"h220h204h232v231v342h201h242v313v254h253v221"],[23,"h221v300h333v231v223v350h230h244h252h201v240"],[23,"h221v300h333v231v224v350h230h243h240h202v240"],[23,"h223v343h204v212h242v254v321v251h201h250v203"],[23,"h220h303h211h230v331h200v223h352v204v251v254h243"],[24,"h222v300h333v230v224v350h230h244h240h201v240h353"],[24,"h221v223v252h240h200h213h310v202h303v243v254"],[24,"h220v204v234v213v240h232v342v230h254v224h200v220"],[24,"h220v204v234v213v240h232v342v231h254v224h200v221"],[24,"h221h214v231h342h200v203h352h250v220h231h303v252v254"],[24,"h223v300h332v230v221v350h230h244h240h201v240h353"],[24,"h221v203v234v213v240h232v342v231h254v224h200v220"],[24,"h222v300h333v230v223v350h230h244h240h201v241h353"],[25,"h220v203v234v213v240h232v342v230h250v224h200v221v252"],[25,"h220v204v234v213v240h232v342v230h254v224h200v220v251"],[25,"h220h210v213v221h234v330h252h204h254h200v251h243"],[25,"h220h210v214v221h234v330h252h204h254h200v251h242"],[25,"h222v220v251v234h234h303v211h232h244v241v301"],[25,"h220v250h242h250h301h353h311v222v232v200h244v252v241"],[25,"h222v220v251v234h234h303v214h232h244v241v301"],[25,"h220v250h242h250h300h353h312v222v232v203h244v252v242"],[25,"h221h210v213v220h232v330h254h204h250h200v252h244"],[25,"h220v203v234v213v240h232v342v230h254v224h200v220v252"],[25,"h221v224v233h300v254h210v252h253h240h313v202h203"],[25,"h220v204v234v213v240h232v342v231h254v224h200v221v252"],[26,"h221v223v252h240h201h213h310v202h303v243v254v233"],[26,"h221v224v252h240h200h213h310v202h303v244v254v233"],[26,"h223v224v252h240h200h214h310v202h303v244v254v233"],[26,"h221v224v252h240h201h213h310v202h303v243v254v233"],[26,"h223v224v252h240h200h213h310v202h303v244v254v234"],[26,"h223v224v252h240h200h213h310v202h303v244v254v233"],[26,"h222v224v252h240h200h213h310v202h303v244v254v234"],[26,"h221v224v252h240h200h213h310v202h303v243v254v233"],[27,"h220v341h303h243v214v220h230v251h232h254v253"],[27,"h221v341h303h242v214v220h230v251h232h253v253"],[27,"h220v341h303h243v214v220h230v251h232h253v253"],[27,"h222v340h300h243v214v224h230v250h232h253v252"],[27,"h222v340h300h244v211v224h230v250h232h250v252"],[27,"h221v223v242h300v254h210v252h250h240h312v202h203v234"],[27,"h222v341h303h243v214v220h230v251h232h252v253"],[27,"h222v340h300h243v211v224h230v250h232h253v252"],[27,"h222v341h303h243v214v220h230v251h232h254v253"],[27,"h221v223v242h300v254h210v252h250h240h312v202h203v233"],[27,"h222v341h300h243v214v224h230v250h232h254v253"],[27,"h221v341h303h243v214v220h230v251h232h254v253"],[28,"h221v341v201h240h303v220h230v231v234"],[28,"h221v341v201h240h303v224h230v232v234"],[28,"h221v340v201h240h300v223h230v232v234"],[28,"h221v342v201h240h303v224h230v232v234"],[28,"h221v340v201h244h301v223h230v231v234"],[28,"h221v340v201h244h300v223h234v231v233"],[28,"h221v343v201h240h303v223h230v232v234"],[28,"h220v303h233h251v231v322v241v234v210v353h203"],[28,"h221v341v201h240h303v223h230v231v234"],[28,"h221v343v201h240h302v223h230v231v234"],[28,"h221v342v201h240h300v224h230v232v234"],[28,"h221v340v201h244h300v223h230v231v233"],[29,"h220v231h310v204v222v351h301v243h242h230h204"],[29,"h220v233h313v204v222v352h301v244h241h230h204"],[29,"h220v233h311v204v222v352h301v241h241h230h204"],[29,"h220v234h310v204v222v352h301v244h241h230h204"],[29,"h223v221v202h340h210h243h204v230v351h233h231h351h200"],[29,"h223v221v202h340h210h243h204v230v352h233h231h352h200"],[29,"h220v231h310v204v222v353h301v243h242h230h204"],[29,"h223v224v252h240h201h213h310v202h303v244v254v234h233"],[29,"h222v224v252h240h200h213h310v202h303v244v254v234h233"],[29,"h223v223v252h240h201h214h310v202h303v244v254v234h233"],[29,"h220v234h310v204v222v353h301v244h241h230h204"],[29,"h220v233h311v204v222v352h301v244h241h230h204"],[30,"h221v232h244v242h302v224h330h213v234v200"],[30,"h221v232h240v242h303v224h330h211v234v201"],[30,"h221v232h240v242h300v224h330h213v234v201"],[30,"h221v231h240v244h302v224h332h211v234v200"],[30,"h221v232h240v242h303v224h330h213v234v201"],[30,"h221v232h240v243h300v224h330h214v234v201"],[30,"h221v231h240v244h302v224h332h214v234v201"],[30,"h221v232h240v243h303v224h330h211v234v201"],[30,"h221v231h240v244h301v224h330h214v233v201"],[30,"h221v232h240v242h302v224h330h213v234v201"],[30,"h221v232h240v244h300v224h330h214v234v201"],[30,"h221v232h240v242h303v220h330h213v234v200"],[33,"h221v220v254h253h303h350v252v200v331h230h214v243h240"],[33,"h221v220v254h253h303h350v252v200v331h231h214v243h242"],[33,"h221v223v254h253h300h350v252v201v331h230h214v242h240"],[33,"h221v220v254h253h303h350v252v200v331h230h214v243h242"],[33,"h220v220v254h253h303h350v252v200v331h231h214v243h242"],[33,"h221v223v254h253h300h350v252v201v330h230h214v242h240"],[33,"h221v223v254h253h303h350v252v201v331h230h214v242h240"],[33,"h221v220v254h253h303h350v252v200v331h231h214v243h240"],[33,"h221v223v254h253h300h350v252v201v331h230h211v242h240"],[33,"h221v220v254h253h303h350v252v200v331h230h214v243h241"],[33,"h220v220v254h253h303h350v252v200v331h230h214v243h242"],[33,"h221v223v254h253h303h350v252v201v331h230h214v243h240"],[33,"h221v220v254h253h303h350v252v201v331h230h214v243h240"],[33,"h220v220v254h253h303h350v252v200v331h230h214v243h241"],[33,"h220v220v254h253h303h350v252v200v331h231h214v243h240"],[33,"h221v223v254h253h300h350v252v201v330h230h211v242h240"],[34,"h221v240h254h230h240v234v223h301v242v200v232"],[34,"h221v240h251h230h240v234v223h301v242v200v232"],[38,"h221v240h254h230h240v234v223h301v242v200v232h212"],[38,"h220v240h251h230h240v234v223h301v242v200v232h211"],[38,"h221v240h251h230h240v234v223h301v242v200v232h211"],[38,"h220v240h254h230h240v234v223h301v242v200v232h211"],[38,"h221v240h250h230h240v234v223h301v242v200v232h212"],[38,"h220v240h250h230h240v234v223h301v242v200v232h212"],[38,"h221v240h254h230h240v234v224h301v242v200v232h212"],[38,"h220v240h250h230h240v234v223h301v244v200v232h212"],[38,"h220v240h254h230h240v234v223h301v242v200v232h212"],[38,"h220v242h250h230h240v234v222h301v240v200v232h212"],[38,"h220v241h250h230h240v234v222h301v244v200v232h212"],[38,"h220v242h250h230h240v234v222h301v244v200v232h212"],[38,"h220v241h250h230h240v234v223h301v244v200v232h212"],[41,"h223v321v352v211v240v234h350v230h233h200v201h241"],[41,"h223v320v352v211v244v234h350v230h233h204v201h241"],[41,"h223v320v353v212v244v234h350v230h233h204v203h241"],[41,"h223v320v353v211v240v234h350v230h233h200v203h241"],[41,"h223v321v352v211v244v234h350v230h233h200v201h241"],[41,"h223v320v352v212v244v234h350v230h233h204v203h241"],[41,"h223v321v353v211v244v234h350v230h233h200v201h241"],[41,"h223v321v352v211v244v234h350v230h233h204v201h241"],[41,"h223v320v353v212v244v234h350v230h233h204v201h241"],[41,"h223v320v353v211v240v234h350v230h231h200v203h241"],[41,"h223v320v353v211v240v234h350v230h233h200v201h241"],[41,"h223v320v352v212v244v234h350v230h233h204v201h241"],[41,"h223v320v351v212v240v234h350v230h233h200v201h241"],[41,"h223v320v351v211v240v234h350v230h233h200v201h241"],[41,"h223v320v351v212v244v234h350v230h233h204v201h241"],[41,"h223v320v351v212v244v234h350v230h233h200v201h241"],[41,"h223v321v353v212v244v234h350v230h233h204v201h241"]];
+
+// Tamaño del garaje según el nivel.
+function boardSize(L) { return L <= 5 ? 5 : 6; }
+
+// Recorre todos los estados que se alcanzan desde el tablero cs y calcula la distancia de cada uno a la
+// puerta con una búsqueda desde todas las salidas a la vez. Devuelve un estado cuya distancia cae en
+// [target, hi] (o el más lejano si ninguno llega) y la distancia máxima del tablero; null si hay demasiados estados.
+function bfsDist(n, cs, cap, target, hi, rnd) {
+  var m = cs.length, gate = n - 2, i, j, k;
+  var mult = new Array(m), k0 = 0;
+  for (i = m - 1, k = 1; i >= 0; i--, k *= n) mult[i] = k;
+  for (i = 0; i < m; i++) k0 += cs[i][3] * mult[i];
+  var p = new Array(m), g = new Uint8Array(n * n);
+  function expand(key, out) {
+    var t = key;
+    out.length = 0;
+    for (var a = m - 1; a >= 0; a--) { p[a] = t % n; t = (t - p[a]) / n; }
+    g.fill(0);
+    for (var b = 0; b < m; b++) {
+      var o = cs[b][0], f = cs[b][2];
+      for (var c2 = 0; c2 < cs[b][1]; c2++) g[o === "h" ? f * n + p[b] + c2 : (p[b] + c2) * n + f] = 1;
+    }
+    for (var q = 0; q < m; q++) {
+      var horiz = cs[q][0] === "h", len = cs[q][1], fx = cs[q][2];
+      for (var dir = -1; dir <= 1; dir += 2) {
+        var x = p[q];
+        for (;;) {
+          var edge = dir < 0 ? x - 1 : x + len;
+          if (edge < 0 || edge >= n) break;
+          if (g[horiz ? fx * n + edge : edge * n + fx]) break;
+          x += dir;
+          out.push(key + (x - p[q]) * mult[q]);
+        }
+      }
+    }
+  }
+  var keys = [k0], seen = new Map(), out = [];
+  seen.set(k0, 0);
+  for (var qi = 0; qi < keys.length; qi++) {
+    expand(keys[qi], out);
+    for (j = 0; j < out.length; j++) if (!seen.has(out[j])) { seen.set(out[j], keys.length); keys.push(out[j]); }
+    if (keys.length > cap) return null;
+  }
+  var dist = new Int16Array(keys.length).fill(-1), queue = [];
+  for (i = 0; i < keys.length; i++) if (Math.floor(keys[i] / mult[0]) === gate) { dist[i] = 0; queue.push(i); }
+  if (!queue.length) return null;
+  for (qi = 0; qi < queue.length; qi++) {
+    expand(keys[queue[qi]], out);
+    for (j = 0; j < out.length; j++) {
+      var ni = seen.get(out[j]);
+      if (dist[ni] < 0) { dist[ni] = dist[queue[qi]] + 1; queue.push(ni); }
+    }
+  }
+  var maxD = 0, inRange = [];
+  for (i = 0; i < keys.length; i++) {
+    if (dist[i] > maxD) maxD = dist[i];
+    if (dist[i] >= target && dist[i] <= hi) inRange.push(i);
+  }
+  if (maxD < 1) return null;
+  var pick;
+  if (inRange.length) pick = inRange[rnd(inRange.length)];
+  else { var far = []; for (i = 0; i < keys.length; i++) if (dist[i] === maxD) far.push(i); pick = far[rnd(far.length)]; }
+  var key = keys[pick], pos = new Array(m);
+  for (i = m - 1; i >= 0; i--) { pos[i] = key % n; key = (key - pos[i]) / n; }
+  return { pos: pos, d: dist[pick], maxD: maxD };
+}
+
+// Genera el nivel L de forma determinista. Parte de tableros al azar con semilla fija, los modifica
+// para que tengan estados lejanos a la salida y elige una posición inicial con el par buscado.
+// Se serializa para ejecutarse en un Worker.
+function genCore(L) {
+  var n = boardSize(L), er = (n - 1) >> 1;
+  var target = Math.min(3 + Math.round(L * 0.55), 36);
+  var hi = target + 1 + Math.floor(target / 8);
+  var maxCars = n === 5 ? 9 : n === 6 ? 12 : 16;
+  var minCars = n === 5 ? 5 : n === 6 ? 8 : 10;
+  var cap = n === 5 ? 6000 : n === 6 ? 20000 : 30000;
+  var maxEval = n === 5 ? 40 : 70;
+  var s = "PARKING#" + L, h = 2166136261;
+  for (var q = 0; q < s.length; q++) { h ^= s.charCodeAt(q); h = Math.imul(h, 16777619); }
+  var a = h | 0;
+  function R() {
+    a = (a + 0x6D2B79F5) | 0;
+    var t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  }
+  function ri(m) { return Math.floor(R() * m); }
+  function valid(cs) {
+    var occ = {};
+    for (var i = 0; i < cs.length; i++) {
+      var c = cs[i];
+      if (i > 0 && c[0] === "h" && c[2] === er) return false;
+      if (c[3] < 0 || c[3] + c[1] > n || c[2] < 0 || c[2] >= n) return false;
+      for (var k = 0; k < c[1]; k++) {
+        var key = c[0] === "h" ? c[2] * n + c[3] + k : (c[3] + k) * n + c[2];
+        if (occ[key]) return false;
+        occ[key] = 1;
+      }
+    }
+    return true;
+  }
+  function randomCar() {
+    var l = R() < 0.25 ? 3 : 2, o = R() < 0.5 ? "h" : "v";
+    return [o, l, ri(n), ri(n - l + 1)];
+  }
+  function randomBoard() {
+    var cnt = n === 5 ? 6 + ri(3) : n === 6 ? 9 + ri(3) : 12 + ri(4);
+    var cs = [["h", 2, er, ri(n - 2)]], tries = 0;
+    while (cs.length < cnt && tries++ < 300) {
+      var t = cs.concat([randomCar()]);
+      if (valid(t)) cs = t;
+    }
+    return cs;
+  }
+  function mutate(cs) {
+    var t = cs.map(function (c) { return c.slice(); }), r = ri(10);
+    if (r < 6 && t.length > 1) {
+      var c = t[1 + ri(t.length - 1)];
+      c[3] = ri(n - c[1] + 1);
+      if (R() < 0.4) c[2] = ri(n);
+    } else if (r < 8) {
+      t[0][3] = ri(n - 2);
+    } else if (r < 9) {
+      if (t.length <= minCars) return null;
+      t.splice(1 + ri(t.length - 1), 1);
+    } else {
+      if (t.length >= maxCars) return null;
+      t.push(randomCar());
+    }
+    return valid(t) ? t : null;
+  }
+  function build(cs, res) { return { n: n, er: er, par: res.d, cars: cs.map(function (c, i) { return [c[0], c[1], c[2], res.pos[i]]; }) }; }
+  if (n === 6) {
+    var pool = LIB.filter(function (e) { return e[0] >= target; });
+    if (!pool.length) {
+      var mx = 0;
+      LIB.forEach(function (e) { if (e[0] > mx) mx = e[0]; });
+      pool = LIB.filter(function (e) { return e[0] === mx; });
+    }
+    var pick = pool[ri(pool.length)], lcs = [];
+    for (var u = 0; u < pick[1].length; u += 4) lcs.push([pick[1][u], +pick[1][u + 1], +pick[1][u + 2], +pick[1][u + 3]]);
+    var lres = bfsDist(n, lcs, 150000, target, hi, ri);
+    if (lres) return build(lcs, lres);
+  }
+  var cur = null, curMax = -1, stale = 0, best = null, bestD = 0;
+  for (var ev = 0; ev < maxEval; ev++) {
+    var cand = cur && stale < 20 ? mutate(cur) : randomBoard();
+    if (!cand) continue;
+    if (!cur || stale >= 20) { cur = null; curMax = -1; stale = 0; }
+    var res = bfsDist(n, cand, cap, target, hi, ri);
+    if (!res) { stale++; continue; }
+    if (res.d >= target && res.d <= hi) return build(cand, res);
+    if (res.d > bestD && res.d <= hi) { bestD = res.d; best = build(cand, res); }
+    if (res.maxD >= curMax) { if (res.maxD > curMax) stale = 0; else stale++; cur = cand; curMax = res.maxD; } else stale++;
+  }
+  return best || { n: n, er: er, par: n - 2, cars: [["h", 2, er, 0]] };
+}
+//#CORE-END
+</script>
+
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("board");
+  const ctx = canvas.getContext("2d");
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const STORE_KEY = "parking.v1";
+  const FONT = '"Silkscreen", "Courier New", monospace';
+
+  const PALETTE = [
+    ["#e0332f", "rojo"], ["#3478f0", "azul"], ["#2fb26a", "verde"], ["#f0c020", "amarillo"],
+    ["#8a5be0", "morado"], ["#f08a2a", "naranja"], ["#1fb5c9", "turquesa"], ["#e866a8", "rosa"],
+    ["#c7cfdb", "plata"], ["#9a6a45", "marrón"], ["#9acd32", "lima"], ["#f4f6fa", "blanco"],
+    ["#6cc3ff", "celeste"], ["#8d2b4a", "granate"], ["#2d7a64", "verde oscuro"], ["#ff7f6e", "coral"]
+  ];
+  function hexRgb(h) { return [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); }
+  function mix(h, o, t) {
+    const a = hexRgb(h), b = o === "w" ? [255, 255, 255] : [0, 0, 0];
+    return "rgb(" + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(",") + ")";
+  }
+  PALETTE.forEach((p) => {
+    p.hi = mix(p[0], "w", 0.3); p.base = p[0]; p.lo = mix(p[0], "k", 0.34);
+    p.roof = mix(p[0], "w", 0.16); p.box = mix(p[0], "w", 0.26);
+  });
+
+  // ---------- persistencia ----------
+  let store = { level: 1, max: 1, best: {} };
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE_KEY));
+    if (raw && typeof raw === "object") {
+      store.max = Math.max(1, raw.max | 0);
+      store.level = Math.min(store.max, Math.max(1, raw.level | 0));
+      if (raw.best && typeof raw.best === "object") store.best = raw.best;
+    }
+  } catch (e) { /* sin almacenamiento */ }
+  function save() { try { localStorage.setItem(STORE_KEY, JSON.stringify(store)); } catch (e) { /* ignorar */ } }
+
+  // ---------- generación en segundo plano ----------
+  const cache = new Map();
+  const pending = new Map();
+  let worker = null, reqId = 0;
+  function startWorker() {
+    try {
+      const src = "var LIB=" + JSON.stringify(LIB) + ";" + bfsSolve.toString() + ";" + bfsDist.toString() + ";" + boardSize.toString() + ";" + genCore.toString() +
+        ";self.onmessage=function(e){self.postMessage({id:e.data.id,level:genCore(e.data.L)});};";
+      const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+      worker = new Worker(url);
+      worker.onmessage = (e) => { const cb = pending.get(e.data.id); pending.delete(e.data.id); if (cb) cb(e.data.level); };
+      worker.onerror = () => { worker = null; };
+    } catch (err) { worker = null; }
+  }
+  startWorker();
+  function getLevel(L, cb) {
+    if (cache.has(L)) { cb(cache.get(L)); return; }
+    const done = (lv) => { cache.set(L, lv); cb(lv); };
+    if (worker) {
+      const id = ++reqId;
+      pending.set(id, done);
+      worker.postMessage({ id, L });
+    } else {
+      setTimeout(() => done(genCore(L)), 30);
+    }
+  }
+  function prefetch(L) { if (!cache.has(L)) getLevel(L, () => {}); }
+
+  // ---------- estado ----------
+  const st = {
+    level: 1, lv: null, cars: [], sel: 0, history: [], moves: 0, lastMoved: -1,
+    won: false, wonAt: 0, hint: null, loading: false, token: 0,
+  };
+  window.parking = { st };
+  let cs = 40, pad = 18, ext = 36, W = 0, H = 0, dpr = 1, bg = null;
+  let drag = null;
+
+  function loadLevel(L) {
+    L = Math.max(1, L | 0);
+    const token = ++st.token;
+    st.level = L; st.loading = !cache.has(L);
+    store.level = L; save();
+    $("loading").hidden = !st.loading;
+    updateUI();
+    getLevel(L, (lv) => {
+      if (token !== st.token) return;
+      st.loading = false;
+      $("loading").hidden = true;
+      begin(lv);
+      prefetch(L + 1);
+    });
+  }
+
+  function begin(lv) {
+    st.lv = lv;
+    st.cars = lv.cars.map((d, i) => ({ o: d[0], l: d[1], f: d[2], p: d[3], vp: d[3], pal: PALETTE[i % PALETTE.length], i }));
+    st.sel = 0; st.history = []; st.moves = 0; st.lastMoved = -1;
+    st.won = false; st.wonAt = 0; st.hint = null; drag = null;
+    layout();
+    updateUI();
+    setStatus(st.level === 1
+      ? "Arrastra los coches por su eje para abrirle paso al coche rojo hasta la salida de la derecha."
+      : "Saca el coche rojo. Par: " + lv.par + (lv.par === 1 ? " movimiento." : " movimientos."));
+    kick();
+  }
+
+  // ---------- reglas ----------
+  function occupancy(skip) {
+    const n = st.lv.n, g = new Uint8Array(n * n);
+    for (const c of st.cars) {
+      if (c.i === skip) continue;
+      for (let k = 0; k < c.l; k++) g[c.o === "h" ? c.f * n + c.p + k : (c.p + k) * n + c.f] = 1;
+    }
+    return g;
+  }
+  function range(c) {
+    const n = st.lv.n, g = occupancy(c.i);
+    const at = (x) => g[c.o === "h" ? c.f * n + x : x * n + c.f];
+    let lo = c.p, hi = c.p;
+    while (lo - 1 >= 0 && !at(lo - 1)) lo--;
+    while (hi + c.l < n && !at(hi + c.l)) hi++;
+    return [lo, hi];
+  }
+  function commit(c, from, to) {
+    if (from === to) return;
+    const counted = st.lastMoved !== c.i;
+    if (counted) st.moves++;
+    st.history.push({ i: c.i, from, to, counted });
+    st.lastMoved = c.i;
+    st.hint = null;
+    updateUI();
+    if (st.cars[0].p === st.lv.n - 2) win();
+    else setStatus("Despeja el camino hasta la salida.");
+    kick();
+  }
+  function undo() {
+    if (st.won || st.loading || !st.history.length) return;
+    const h = st.history.pop(), c = st.cars[h.i];
+    c.p = h.from;
+    if (h.counted) st.moves--;
+    st.lastMoved = st.history.length ? st.history[st.history.length - 1].i : -1;
+    st.hint = null; st.sel = h.i;
+    updateUI(); setStatus("Movimiento deshecho."); kick();
+  }
+  function restart() {
+    if (!st.lv || st.loading) return;
+    begin(st.lv);
+    setStatus("Nivel reiniciado.");
+  }
+  function win() {
+    st.won = true; st.wonAt = performance.now(); st.hint = null;
+    const L = st.level, par = st.lv.par;
+    if (!store.best[L] || st.moves < store.best[L]) store.best[L] = st.moves;
+    if (store.max < L + 1) store.max = L + 1;
+    save();
+    updateUI();
+    const verdict = st.moves < par ? "Mejor que el par." : st.moves === par ? "Par exacto." : "El par era " + par + ". Puedes reintentarlo.";
+    setStatus("<strong>¡Fuera! " + st.moves + (st.moves === 1 ? " movimiento." : " movimientos.") + "</strong> " + verdict, true);
+    prefetch(L + 1);
+    kick();
+  }
+
+  // ---------- pista ----------
+  function hint() {
+    if (st.won || st.loading || !st.lv) return;
+    const spec = st.cars.map((c) => [c.o, c.l, c.f, c.p]);
+    const r = bfsSolve(st.lv.n, spec, 400000);
+    if (!r || r.i < 0) { setStatus("Desde aquí no veo salida. Deshaz algún movimiento."); return; }
+    const c = st.cars[r.i], k = Math.abs(r.to - c.p);
+    const dir = c.o === "h" ? (r.to > c.p ? "a la derecha" : "a la izquierda") : (r.to > c.p ? "hacia abajo" : "hacia arriba");
+    st.hint = { i: r.i, to: r.to, until: performance.now() + 4200 };
+    st.sel = r.i;
+    setStatus("Pista: mueve el coche " + c.pal[1] + " " + k + (k === 1 ? " plaza " : " plazas ") + dir + ".");
+    kick();
+  }
+
+  // ---------- interfaz ----------
+  function setStatus(msg, html) {
+    const el = $("status");
+    if (html) el.innerHTML = msg; else el.textContent = msg;
+  }
+  function updateUI() {
+    $("levelname").textContent = "Nivel " + st.level;
+    $("moves").textContent = st.moves;
+    $("par").textContent = st.lv && !st.loading ? st.lv.par : "-";
+    $("prev").disabled = st.level <= 1;
+    $("next").disabled = st.level >= store.max;
+    $("hint").disabled = st.won || st.loading;
+    $("undo").disabled = st.won || st.loading || !st.history.length;
+    $("restart").disabled = st.loading || (!st.history.length && !st.won);
+    $("nextLevel").hidden = !st.won;
+  }
+  function layout() {
+    const lv = st.lv;
+    if (!lv) return;
+    const stage = $("stage");
+    const aw = Math.max(200, stage.clientWidth), ah = Math.max(200, stage.clientHeight);
+    cs = Math.floor(Math.min(aw / (lv.n + 1.74), ah / (lv.n + 0.84), 84));
+    cs = Math.max(cs, 18);
+    pad = Math.round(cs * 0.42);
+    ext = Math.round(cs * 0.9);
+    W = lv.n * cs + pad * 2 + ext;
+    H = lv.n * cs + pad * 2;
+    dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    bg = document.createElement("canvas");
+    bg.width = canvas.width; bg.height = canvas.height;
+    const g = bg.getContext("2d");
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paintBackground(g);
+  }
+
+  // ---------- dibujo ----------
+  function hash2(x, y, s) {
+    let h = Math.imul(x + 1, 374761393) ^ Math.imul(y + 1, 668265263) ^ Math.imul(s + 1, 2246822519);
+    h = Math.imul(h ^ (h >>> 13), 1274126177);
+    return (h ^ (h >>> 16)) >>> 0;
+  }
+  function rr(g, x, y, w, h, r) {
+    g.beginPath();
+    if (g.roundRect) { g.roundRect(x, y, w, h, r); return; }
+    r = Math.min(r, w / 2, h / 2);
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  function paintBackground(g) {
+    const lv = st.lv, n = lv.n, er = lv.er;
+    const bw = n * cs + pad * 2;
+    // marco de hormigón
+    let grad = g.createLinearGradient(0, 0, bw, bw);
+    grad.addColorStop(0, "#515a70"); grad.addColorStop(1, "#303647");
+    rr(g, 0, 0, bw, bw, cs * 0.26); g.fillStyle = grad; g.fill();
+    g.strokeStyle = "rgba(255,255,255,0.14)"; g.lineWidth = 1.5;
+    rr(g, 0.75, 0.75, bw - 1.5, bw - 1.5, cs * 0.26); g.stroke();
+    // asfalto
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const px = pad + x * cs, py = pad + y * cs, hh = hash2(x, y, st.level);
+      g.fillStyle = (x + y) % 2 ? "#2c3040" : "#303445";
+      g.fillRect(px, py, cs, cs);
+      for (let k = 0; k < 3; k++) {
+        const v = hh >>> (k * 5);
+        g.fillStyle = k === 1 ? "rgba(255,255,255,0.045)" : "rgba(0,0,0,0.16)";
+        g.fillRect(px + ((v % 90) / 100) * cs, py + (((v >>> 3) % 90) / 100) * cs, cs * 0.05, cs * 0.05);
+      }
+    }
+    // líneas de plaza
+    g.strokeStyle = "rgba(255,255,255,0.1)"; g.lineWidth = 1;
+    g.beginPath();
+    for (let i = 1; i < n; i++) {
+      g.moveTo(pad + i * cs, pad); g.lineTo(pad + i * cs, pad + n * cs);
+      g.moveTo(pad, pad + i * cs); g.lineTo(pad + n * cs, pad + i * cs);
+    }
+    g.stroke();
+    // carril de salida
+    g.save();
+    g.strokeStyle = "rgba(255,194,26,0.5)"; g.lineWidth = Math.max(2, cs * 0.05);
+    g.setLineDash([cs * 0.22, cs * 0.18]);
+    g.beginPath(); g.moveTo(pad, pad + er * cs + cs / 2); g.lineTo(pad + n * cs, pad + er * cs + cs / 2); g.stroke();
+    g.restore();
+    // sombra interior
+    grad = g.createLinearGradient(0, pad, 0, pad + cs * 0.4);
+    grad.addColorStop(0, "rgba(0,0,0,0.4)"); grad.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = grad; g.fillRect(pad, pad, n * cs, cs * 0.4);
+    grad = g.createLinearGradient(pad, 0, pad + cs * 0.3, 0);
+    grad.addColorStop(0, "rgba(0,0,0,0.3)"); grad.addColorStop(1, "rgba(0,0,0,0)");
+    g.fillStyle = grad; g.fillRect(pad, pad, cs * 0.3, n * cs);
+    g.strokeStyle = "rgba(255,255,255,0.22)"; g.lineWidth = 2;
+    g.strokeRect(pad - 1, pad - 1, n * cs + 2, n * cs + 2);
+    // puerta de salida: abre el muro derecho y continúa la calzada
+    const gx = pad + n * cs - 1, gy = pad + er * cs;
+    g.fillStyle = "#2c3040"; g.fillRect(gx, gy, pad + ext + 1, cs);
+    g.fillStyle = "rgba(0,0,0,0.25)"; g.fillRect(gx + pad, gy, ext, cs);
+    g.fillStyle = "#6b7590"; g.fillRect(gx + pad, gy - 3, ext, 3); g.fillRect(gx + pad, gy + cs, ext, 3);
+    g.fillStyle = "#515a70"; g.fillRect(gx, gy - 2, pad, 2); g.fillRect(gx, gy + cs, pad, 2);
+    // luz y flechas verdes
+    grad = g.createLinearGradient(gx, 0, W, 0);
+    grad.addColorStop(0, "rgba(76,223,138,0.0)"); grad.addColorStop(1, "rgba(76,223,138,0.28)");
+    g.fillStyle = grad; g.fillRect(gx, gy, W - gx, cs);
+    g.save();
+    g.strokeStyle = "#4cdf8a"; g.lineWidth = Math.max(2, cs * 0.07); g.lineCap = "round"; g.lineJoin = "round";
+    g.shadowColor = "rgba(76,223,138,0.8)"; g.shadowBlur = cs * 0.2;
+    const ax = gx + pad + ext * 0.18, ay = gy + cs / 2, s = cs * 0.14;
+    for (let k = 0; k < 2; k++) {
+      const x = ax + k * s * 1.7;
+      g.beginPath(); g.moveTo(x, ay - s); g.lineTo(x + s, ay); g.lineTo(x, ay + s); g.stroke();
+    }
+    g.restore();
+    // bolardos con franjas de aviso en las esquinas
+    const bs = pad * 0.95;
+    [[0, 0], [bw - bs, 0], [0, bw - bs], [bw - bs, bw - bs]].forEach(([x, y]) => {
+      if (x > 0 && Math.abs(y + bs / 2 - (pad + er * cs + cs / 2)) < cs) return;
+      g.save();
+      rr(g, x + bs * 0.05, y + bs * 0.05, bs * 0.9, bs * 0.9, bs * 0.2); g.clip();
+      g.fillStyle = "#ffc21a"; g.fillRect(x, y, bs, bs);
+      g.fillStyle = "#1a1612";
+      for (let k = -2; k < 6; k++) {
+        g.beginPath();
+        g.moveTo(x + k * bs * 0.35, y); g.lineTo(x + k * bs * 0.35 + bs * 0.17, y);
+        g.lineTo(x + k * bs * 0.35 + bs * 0.17 + bs, y + bs); g.lineTo(x + k * bs * 0.35 + bs, y + bs);
+        g.closePath(); g.fill();
+      }
+      g.restore();
+    });
+  }
+
+  function drawCar(c, now) {
+    const cxp = pad + (c.o === "h" ? c.vp + c.l / 2 : c.f + 0.5) * cs;
+    const cyp = pad + (c.o === "h" ? c.f + 0.5 : c.vp + c.l / 2) * cs;
+    const L = c.l * cs - cs * 0.16, Wd = cs * 0.74, x0 = -L / 2, y0 = -Wd / 2;
+    const P = c.pal, hero = c.i === 0, truck = c.l === 3;
+    ctx.save();
+    ctx.translate(cxp, cyp);
+    if (c.o === "v") ctx.rotate(Math.PI / 2);
+    // ruedas
+    ctx.fillStyle = "#0b0d13";
+    const wl = cs * 0.26, wt = cs * 0.08;
+    for (const t of truck ? [0.17, 0.83] : [0.21, 0.79]) for (const sgn of [-1, 1]) {
+      rr(ctx, x0 + t * L - wl / 2, sgn * Wd / 2 - wt / 2, wl, wt, wt / 2); ctx.fill();
+    }
+    // carrocería
+    ctx.shadowColor = hero ? "rgba(255,70,60,0.6)" : "rgba(0,0,0,0.55)";
+    ctx.shadowBlur = hero ? cs * 0.28 : cs * 0.14;
+    ctx.shadowOffsetY = hero ? 0 : cs * 0.05;
+    let grad = ctx.createLinearGradient(0, y0, 0, y0 + Wd);
+    grad.addColorStop(0, P.hi); grad.addColorStop(0.5, P.base); grad.addColorStop(1, P.lo);
+    rr(ctx, x0, y0, L, Wd, Wd * 0.3); ctx.fillStyle = grad; ctx.fill();
+    ctx.shadowColor = "transparent"; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    ctx.strokeStyle = "rgba(255,255,255,0.22)"; ctx.lineWidth = 1;
+    rr(ctx, x0 + 0.5, y0 + 0.5, L - 1, Wd - 1, Wd * 0.3); ctx.stroke();
+    if (hero) {
+      ctx.fillStyle = "rgba(255,255,255,0.88)";
+      ctx.fillRect(x0 + L * 0.04, -Wd * 0.13, L * 0.92, Wd * 0.07);
+      ctx.fillRect(x0 + L * 0.04, Wd * 0.06, L * 0.92, Wd * 0.07);
+    }
+    const glass = () => {
+      const gg = ctx.createLinearGradient(0, y0, 0, y0 + Wd);
+      gg.addColorStop(0, "#27344d"); gg.addColorStop(1, "#0b101b");
+      ctx.fillStyle = gg;
+    };
+    if (!truck) {
+      glass(); rr(ctx, x0 + L * 0.16, y0 + Wd * 0.13, L * 0.56, Wd * 0.74, Wd * 0.18); ctx.fill();
+      grad = ctx.createLinearGradient(0, y0, 0, y0 + Wd);
+      grad.addColorStop(0, P.hi); grad.addColorStop(1, P.roof);
+      ctx.fillStyle = grad;
+      rr(ctx, x0 + L * 0.31, y0 + Wd * 0.22, L * 0.27, Wd * 0.56, Wd * 0.12); ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.lineWidth = Math.max(1, cs * 0.025);
+      ctx.beginPath(); ctx.moveTo(x0 + L * 0.62, y0 + Wd * 0.2); ctx.lineTo(x0 + L * 0.66, y0 + Wd * 0.45); ctx.stroke();
+    } else {
+      grad = ctx.createLinearGradient(0, y0, 0, y0 + Wd);
+      grad.addColorStop(0, P.box); grad.addColorStop(1, P.roof);
+      ctx.fillStyle = grad; rr(ctx, x0 + L * 0.04, y0 + Wd * 0.08, L * 0.56, Wd * 0.84, Wd * 0.1); ctx.fill();
+      ctx.strokeStyle = "rgba(0,0,0,0.2)"; ctx.lineWidth = Math.max(1, cs * 0.025);
+      ctx.beginPath();
+      for (let k = 1; k < 5; k++) { const x = x0 + L * (0.04 + 0.56 * k / 5); ctx.moveTo(x, y0 + Wd * 0.12); ctx.lineTo(x, y0 + Wd * 0.88); }
+      ctx.stroke();
+      glass(); rr(ctx, x0 + L * 0.65, y0 + Wd * 0.14, L * 0.19, Wd * 0.72, Wd * 0.12); ctx.fill();
+    }
+    // faros y luces traseras
+    ctx.save();
+    ctx.shadowColor = "rgba(255,244,170,0.9)"; ctx.shadowBlur = cs * 0.2;
+    ctx.fillStyle = "#fff6c0";
+    for (const y of [y0 + Wd * 0.1, y0 + Wd * 0.7]) { rr(ctx, x0 + L - cs * 0.1, y, cs * 0.07, Wd * 0.2, 2); ctx.fill(); }
+    ctx.restore();
+    ctx.fillStyle = "#ff4d4d";
+    for (const y of [y0 + Wd * 0.1, y0 + Wd * 0.7]) { rr(ctx, x0 + cs * 0.03, y, cs * 0.06, Wd * 0.2, 2); ctx.fill(); }
+    // selección y pista
+    const hinted = st.hint && st.hint.i === c.i && now < st.hint.until;
+    if (hinted) {
+      ctx.strokeStyle = "rgba(255,194,26," + (0.55 + 0.45 * Math.sin(now / 110)).toFixed(2) + ")";
+      ctx.lineWidth = Math.max(3, cs * 0.07);
+      ctx.shadowColor = "rgba(255,194,26,0.9)"; ctx.shadowBlur = cs * 0.2;
+      rr(ctx, x0 - 2, y0 - 2, L + 4, Wd + 4, Wd * 0.34); ctx.stroke();
+    } else if (c.i === st.sel && !st.won) {
+      ctx.strokeStyle = "rgba(255,255,255,0.85)";
+      ctx.lineWidth = Math.max(2, cs * 0.04);
+      rr(ctx, x0 - 2, y0 - 2, L + 4, Wd + 4, Wd * 0.34); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawGhost(now) {
+    const h = st.hint, c = st.cars[h.i];
+    const x = c.o === "h" ? h.to : c.f, y = c.o === "h" ? c.f : h.to;
+    const w = c.o === "h" ? c.l : 1, hh = c.o === "h" ? 1 : c.l;
+    ctx.save();
+    ctx.setLineDash([cs * 0.14, cs * 0.1]);
+    ctx.strokeStyle = "#ffc21a"; ctx.lineWidth = Math.max(2, cs * 0.05);
+    ctx.fillStyle = "rgba(255,194,26,0.16)";
+    rr(ctx, pad + x * cs + cs * 0.08, pad + y * cs + cs * 0.08, w * cs - cs * 0.16, hh * cs - cs * 0.16, cs * 0.2);
+    ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(now) {
+    if (!st.lv || !bg) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bg, 0, 0, W, H);
+    if (st.hint && now < st.hint.until) drawGhost(now);
+    const order = st.cars.slice().sort((a, b) => (drag && drag.car === a ? 1 : 0) - (drag && drag.car === b ? 1 : 0));
+    ctx.save();
+    for (const c of order) drawCar(c, now);
+    ctx.restore();
+    if (st.won) {
+      const t = now - st.wonAt;
+      if (t < 700) {
+        ctx.fillStyle = "rgba(255,255,255," + (0.35 * (1 - t / 700)).toFixed(3) + ")";
+        ctx.fillRect(0, 0, W, H);
+      }
+    }
+  }
+
+  // ---------- bucle ----------
+  let raf = 0, last = 0;
+  function loop(now) {
+    raf = 0;
+    const dt = Math.min(64, now - (last || now)); last = now;
+    let live = false;
+    for (const c of st.cars) {
+      if (st.won && c.i === 0) {
+        const t = Math.max(0, now - st.wonAt - 150) / 1000;
+        c.vp = reduceMotion ? 20 : c.p + t * t * 9;
+        if (c.vp < st.lv.n + 3) live = true;
+        continue;
+      }
+      if (drag && drag.car === c) { live = true; continue; }
+      const d = c.p - c.vp;
+      if (Math.abs(d) > 0.002) {
+        c.vp = reduceMotion ? c.p : c.vp + d * (1 - Math.exp(-dt / 55));
+        live = true;
+      } else c.vp = c.p;
+    }
+    draw(now);
+    if (live || (st.hint && now < st.hint.until) || (st.won && now - st.wonAt < 800)) raf = requestAnimationFrame(loop);
+    else last = 0;
+  }
+  function kick() { if (!raf) raf = requestAnimationFrame(loop); }
+
+  // ---------- entradas ----------
+  function pointCell(e) {
+    const r = canvas.getBoundingClientRect(), k = W / r.width;
+    return [((e.clientX - r.left) * k - pad) / cs, ((e.clientY - r.top) * k - pad) / cs];
+  }
+  canvas.addEventListener("pointerdown", (e) => {
+    if (st.won || st.loading || !st.lv) return;
+    const [fx, fy] = pointCell(e);
+    const car = st.cars.find((c) => c.o === "h"
+      ? fx >= c.vp && fx <= c.vp + c.l && fy >= c.f && fy <= c.f + 1
+      : fy >= c.vp && fy <= c.vp + c.l && fx >= c.f && fx <= c.f + 1);
+    if (!car) return;
+    st.sel = car.i; st.hint = null;
+    drag = { car, p0: car.p, c0: car.o === "h" ? fx : fy, rng: range(car), id: e.pointerId };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) { /* ignorar */ }
+    canvas.classList.add("dragging");
+    kick();
+  });
+  canvas.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const [fx, fy] = pointCell(e);
+    const v = drag.p0 + ((drag.car.o === "h" ? fx : fy) - drag.c0);
+    drag.car.vp = Math.max(drag.rng[0], Math.min(drag.rng[1], v));
+    kick();
+  });
+  function endDrag() {
+    if (!drag) return;
+    const c = drag.car, from = drag.p0, to = Math.round(c.vp);
+    drag = null;
+    canvas.classList.remove("dragging");
+    c.p = to;
+    commit(c, from, to);
+    kick();
+  }
+  canvas.addEventListener("pointerup", endDrag);
+  canvas.addEventListener("pointercancel", endDrag);
+
+  const KEYS = { ArrowUp: [1, -1], ArrowDown: [1, 1], ArrowLeft: [0, -1], ArrowRight: [0, 1], w: [1, -1], s: [1, 1], a: [0, -1], d: [0, 1] };
+  window.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.tagName === "BUTTON" && (e.key === "Enter" || e.key === " ")) return;
+    const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k in KEYS) {
+      e.preventDefault();
+      if (st.won || st.loading || !st.lv) return;
+      const c = st.cars[st.sel], axis = KEYS[k][0], dir = KEYS[k][1];
+      if ((c.o === "h" ? 0 : 1) !== axis) return;
+      const rg = range(c), np = c.p + dir;
+      if (np < rg[0] || np > rg[1]) return;
+      const from = c.p; c.p = np; commit(c, from, np);
+    } else if (k === "r") restart();
+    else if (k === "h") hint();
+    else if (k === "z") undo();
+    else if (k === "c" && st.lv && !st.won) { st.sel = (st.sel + 1) % st.cars.length; kick(); }
+    else if (e.key === "Enter" && st.won) loadLevel(st.level + 1);
+  });
+
+  function goLevel(L) { loadLevel(Math.max(1, Math.min(L, store.max))); }
+  $("prev").addEventListener("click", () => goLevel(st.level - 1));
+  $("next").addEventListener("click", () => goLevel(st.level + 1));
+  $("nextLevel").addEventListener("click", () => goLevel(st.level + 1));
+  $("undo").addEventListener("click", undo);
+  $("restart").addEventListener("click", restart);
+  $("hint").addEventListener("click", hint);
+
+  let lastW = 0, lastH = 0;
+  new ResizeObserver(() => {
+    const s = $("stage");
+    if (s.clientWidth === lastW && s.clientHeight === lastH) return;
+    lastW = s.clientWidth; lastH = s.clientHeight;
+    layout(); kick();
+  }).observe($("stage"));
+
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { layout(); kick(); });
+  loadLevel(store.level);
+})();
+</script>
+
+</body></html>
