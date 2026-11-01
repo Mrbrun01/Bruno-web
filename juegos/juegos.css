@@ -1,0 +1,14 @@
+/* =========================================================
+   JUEGOS · estilos compartidos entre juegos
+   ========================================================= */
+/* Colores de sede compartidos por Parchís y UNO */
+:root { --p0: #d19a1e; --p1: #4f7bc7; --p2: #c4453b; --p3: #4f9d3a; }
+html[data-style="board"] { --p0: #d19a1e; --p1: #0f766e; --p2: #c4453b; --p3: #4f9d3a; }
+html[data-style="fiz"] { --p0: #9d0a17; --p1: #7d1c58; --p2: #c60b1e; --p3: #13774A; }
+
+/* Ayuda bajo el tablero (Snake y Fruit Merge) */
+.sn-help { margin: 0; }
+
+/* Selector de jugadores (Parchís y UNO) */
+.par-np { display: flex; align-items: center; gap: 8px; align-self: flex-start; font-weight: 600; }
+.par-np .select { width: auto; }

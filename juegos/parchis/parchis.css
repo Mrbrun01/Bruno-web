@@ -1,0 +1,24 @@
+/* =========================================================
+   PARCHÍS
+   ========================================================= */
+.par { display: grid; grid-template-columns: minmax(0, 1fr) 220px; gap: 24px; align-items: start; }
+.par-main { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.par-status { min-height: 1.5em; margin: 0; font-weight: 700; text-align: center; }
+.par-status.win { color: var(--ok); }
+.par-stage { width: min(100%, 460px); }
+.par-board { width: 100%; aspect-ratio: 1; background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--shadow); }
+.par-board .cl { fill: var(--surface); stroke: var(--line); stroke-width: .02; }
+.par-board .cl.sf { fill: var(--hi-soft); }
+.par-board .hs { fill: none; stroke-width: .1; opacity: .55; }
+.par-board .ex { fill: none; stroke-width: .1; }
+.par-board .pcc { stroke: rgba(0,0,0,.25); stroke-width: .04; }
+.par-board .pt { font-size: .34px; text-anchor: middle; fill: #fff; font-weight: 700; pointer-events: none; }
+.par-board .ring { fill: none; stroke: var(--ink); stroke-width: .05; stroke-dasharray: .1 .07; }
+.par-board .pc.mv { cursor: pointer; }
+.par-row { display: flex; align-items: center; gap: 14px; }
+.par-dice { color: var(--ink-2); }
+.par-legend h2 { margin: 0 0 12px; font-size: 1.05rem; }
+.par-legend p { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; text-transform: capitalize; }
+.par-dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.par-legend .btn { margin-top: 8px; width: 100%; }
+@media (max-width: 780px) { .par { grid-template-columns: minmax(0, 1fr); } }

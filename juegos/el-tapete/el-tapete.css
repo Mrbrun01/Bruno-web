@@ -1,0 +1,4 @@
+/* EL TAPETE · lo que queda fuera del shadow root (el juego tiene su CSS en tapete.css) */
+.tp-tabs { margin-bottom: 18px; }
+.tp-host { display: block; }
+.tp-host[data-loading] { visibility: hidden; min-height: 60vh; }

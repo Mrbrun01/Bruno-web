@@ -1,0 +1,13 @@
+/* =========================================================
+   BUSCADOR
+   ========================================================= */
+/* Estilo «Board» (se activa con html[data-style="board"]) */
+html[data-style="board"] .bs-logo { background: none; color: var(--hi); transform: none; }
+
+.bs-card { max-width: 780px; margin: 0 auto; padding: 40px clamp(18px, 5vw, 48px) 28px; text-align: center; }
+.bs-logo { display: inline-block; margin: 0 0 26px; padding: 0 16px; font-size: clamp(2.8rem, 9vw, 5rem); font-weight: 800; letter-spacing: -.05em; line-height: 1.15; background: linear-gradient(transparent 58%, var(--hi) 58%, var(--hi) 92%, transparent 92%); transform: rotate(-3deg); transition: transform .25s; }
+.bs-logo:hover { transform: rotate(3deg); }
+.search-big { align-items: stretch; margin: 0 auto; }
+.search-big .search-engines { align-self: center; }
+.bs-tools { display: flex; justify-content: center; margin-top: 22px; }
+.bs-hint { margin: 16px 0 0; font-size: .92rem; }

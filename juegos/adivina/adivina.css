@@ -1,0 +1,18 @@
+/* =========================================================
+   ADIVINA EL NÚMERO
+   ========================================================= */
+.ad-card { max-width: 520px; margin: 0 auto; text-align: center; }
+.ad-range { margin: 0 0 12px; font-size: 1.2rem; }
+.ad-range b { font-size: 1.5rem; }
+.ad-bar { position: relative; height: 10px; margin-bottom: 20px; overflow: hidden; border-radius: 99px; background: var(--surface-2); border: 1px solid var(--line); }
+.ad-bar i { position: absolute; top: 0; bottom: 0; background: var(--hi); border-radius: 99px; transition: left .25s, width .25s; }
+.ad-form { display: flex; justify-content: center; gap: 10px; }
+.ad-input { width: 8rem; min-height: 48px; text-align: center; font-size: 1.5rem; font-weight: 700; }
+.ad-msg { min-height: 3em; margin: 16px 0 8px; font-size: 1.05rem; }
+.ad-msg.win { color: var(--ok); font-weight: 700; }
+.ad-msg.warn { color: var(--bad); }
+.ad-history { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 2rem; margin: 0 0 16px; padding: 0; list-style: none; }
+.ad-history li { display: flex; align-items: baseline; gap: 6px; padding: 3px 10px; border: 1px solid var(--line-2); border-radius: 99px; background: var(--surface-2); font-size: .88rem; }
+.ad-history li.ok { background: var(--ok-bg); border-color: var(--ok); color: var(--ok); }
+.ad-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 14px; border-top: 1px solid var(--line); }
+.ad-best { margin: 0; }

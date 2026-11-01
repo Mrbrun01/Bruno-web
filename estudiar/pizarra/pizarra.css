@@ -1,0 +1,30 @@
+/* =========================================================
+   PIZARRA
+   ========================================================= */
+.pz-layout { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 20px; align-items: start; }
+.pz-side { display: flex; flex-direction: column; gap: 18px; padding: 16px; position: sticky; top: 16px; }
+.pz-group h2 { margin: 0 0 8px; font-size: .95rem; font-weight: 700; }
+.pz-tools { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.pz-tool { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 9px 4px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); font-size: .82rem; font-weight: 600; }
+.pz-tool .i { font-size: 1.3rem; }
+.pz-tool:hover { background: var(--surface-2); }
+.pz-tool[aria-pressed="true"] { background: var(--hi); color: var(--hi-ink); border-color: transparent; }
+.pz-swatches { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
+.pz-sw { aspect-ratio: 1; padding: 0; border-radius: 50%; border: 1px solid var(--line-2); }
+.pz-sw[aria-pressed="true"] { outline: 3px solid var(--blue); outline-offset: 2px; }
+.pz-custom { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: .9rem; }
+.pz-custom input { width: 48px; height: 34px; padding: 2px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--surface); cursor: pointer; }
+.pz-size { display: flex; align-items: center; gap: 12px; }
+.pz-size input[type="range"] { flex: 1; min-width: 0; accent-color: var(--blue); }
+.pz-preview { display: grid; place-items: center; flex: none; width: 64px; height: 64px; overflow: hidden; border: 1px solid var(--line-2); border-radius: 12px; background: #fff; }
+.pz-dot { border-radius: 50%; background: #1b1b1b; }
+.pz-px { margin: 6px 0 8px; font-size: .88rem; }
+.pz-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.pz-check input { width: 20px; height: 20px; accent-color: var(--blue); }
+.pz-dims { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+.pz-actions { display: flex; flex-direction: column; gap: 8px; }
+.pz-row { display: flex; gap: 8px; }
+.pz-row .btn { flex: 1; }
+.pz-stage { display: flex; justify-content: center; overflow: auto; }
+.pz-canvas { display: block; max-width: 100%; height: auto; background: #fff; border: 1px solid var(--line-2); border-radius: 6px; box-shadow: var(--shadow); cursor: crosshair; touch-action: none; }
+@media (max-width: 900px) { .pz-layout { grid-template-columns: minmax(0, 1fr); } .pz-side { position: static; } }

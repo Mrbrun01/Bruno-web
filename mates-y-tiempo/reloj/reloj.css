@@ -1,0 +1,31 @@
+/* =========================================================
+   RELOJ
+   ========================================================= */
+.rl { display: flex; flex-direction: column; align-items: center; gap: 22px; }
+.rl:fullscreen { justify-content: center; padding: 24px; background-color: var(--paper); background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px); background-size: 24px 24px; overflow: auto; }
+.rl-clock { text-align: center; }
+.rl-date { margin: 0 0 6px; color: var(--ink-2); font-weight: 600; font-size: clamp(1rem, 3vw, 1.35rem); }
+.rl-time { display: flex; align-items: baseline; justify-content: center; gap: 12px; font-size: clamp(3.2rem, 15vw, 9rem); font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+#rl-ampm { min-width: 2.5ch; font-size: clamp(1rem, 4vw, 2rem); font-weight: 600; color: var(--ink-2); letter-spacing: 0; text-align: left; }
+.rl-bar { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+.rl-panel { width: min(100%, 30rem); text-align: center; }
+.rl-help { margin: 0; font-size: .92rem; }
+.rl-read { margin: 0 0 16px; font-size: clamp(2.6rem, 11vw, 3.8rem); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; }
+.rl-fields { display: flex; justify-content: center; gap: 14px; margin-bottom: 14px; }
+.rl-fields .input { width: 6.5rem; text-align: center; font-size: 1.3rem; font-weight: 600; }
+.rl-presets { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.rl-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.rl-actions .btn { min-width: 7rem; }
+.rl-status { min-height: 1.4em; margin: 14px 0 0; color: var(--ink-2); }
+.rl-status.alert { color: var(--bad); font-weight: 700; }
+.rl-laps { max-height: 12rem; margin: 18px 0 0; padding: 0; overflow-y: auto; list-style: none; text-align: left; }
+.rl-laps li { display: flex; justify-content: space-between; padding: 8px 4px; border-top: 1px solid var(--line); }
+.rl-laps li span:first-child { color: var(--ink-2); }
+.rl-tzadd { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.rl-tzadd .select { flex: 1 1 220px; }
+.rl-tzlist { display: flex; flex-direction: column; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.rl-tz { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.rl-tz > div:first-child { flex: 1; min-width: 0; text-align: left; }
+.rl-tzname { margin: 0; font-weight: 700; }
+.rl-tzoff { margin: 2px 0 0; font-size: .82rem; }
+.rl-tztime { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; }

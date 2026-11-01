@@ -1,0 +1,13 @@
+/* =========================================================
+   Caja de búsqueda (la usan Inicio y Vídeo y búsqueda › Buscador)
+   ========================================================= */
+.search { display: flex; flex-direction: column; gap: 12px; max-width: 660px; }
+.search-row { display: flex; gap: 8px; }
+.search-input { flex: 1; min-height: 50px; font-size: 1.05rem; border-radius: 12px; }
+.search .btn { min-height: 50px; border-radius: 12px; }
+.search-engines { align-self: flex-start; padding: 3px; }
+.search-engines button { min-height: 32px; padding: 0 11px; font-size: .88rem; }
+
+@media (max-width: 760px) {
+  .search-row { flex-direction: column; }
+}

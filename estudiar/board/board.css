@@ -1,0 +1,29 @@
+/* =========================================================
+   BOARD
+   ========================================================= */
+/* Estilo «Board» (se activa con html[data-style="board"]) */
+html[data-style="board"] .bd-toolbar, html[data-style="board"] .bd-foot { border-radius: 0; }
+
+.bd-sheet { max-width: 860px; margin: 0 auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+.bd-toolbar { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 2px; padding: 8px 10px; background: var(--surface); border-bottom: 1px solid var(--line); border-radius: var(--radius) var(--radius) 0 0; }
+.bd-group { display: flex; align-items: center; gap: 2px; padding: 0 6px; }
+.bd-group + .bd-group { border-left: 1px solid var(--line); }
+.bd-tool { position: relative; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: var(--ink); font-size: 1rem; }
+.bd-tool:hover { background: var(--surface-2); }
+.bd-tool[aria-pressed="true"] { background: var(--hi); color: var(--hi-ink); }
+.bd-color input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+.bd-color::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 4px; height: 3px; border-radius: 2px; background: var(--swatch); }
+.bd-sel { width: auto; min-height: 36px; padding: 0 8px; }
+.bd-editor { min-height: 380px; padding: clamp(20px, 5vw, 44px); outline: none; font-family: var(--font-ui); font-size: 18px; line-height: 1.65; overflow-wrap: anywhere; caret-color: var(--blue); }
+.bd-editor:empty::before { content: attr(data-placeholder); color: var(--ink-3); pointer-events: none; }
+.bd-editor ul, .bd-editor ol { margin: .3em 0; padding-left: 1.5em; }
+.bd-editor [style*="background-color"] { color: #1c2733; }
+.bd-foot { position: sticky; bottom: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 14px; background: var(--surface); border-top: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); font-size: .85rem; }
+.bd-status { display: flex; align-items: center; gap: 8px; margin-right: auto; color: var(--ink-3); }
+.bd-status::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--ink-3); }
+.bd-status[data-state="ok"]::before { background: var(--ok); }
+.bd-status[data-state="saving"]::before { background: var(--hi); box-shadow: 0 0 0 1px var(--ink-3); }
+.bd-status[data-state="error"] { color: var(--bad); }
+.bd-status[data-state="error"]::before { background: var(--bad); }
+.bd-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+@media (max-width: 560px) { .bd-group { padding: 0 3px; } .bd-actions .btn span { display: none; } }

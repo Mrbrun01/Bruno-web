@@ -1,0 +1,23 @@
+/* =========================================================
+   PERSONALIZACIÓN
+   ========================================================= */
+/* PERSONALIZACIÓN */
+.ajustes-card { max-width: 640px; margin-bottom: 18px; }
+.ajustes-card h2 { margin: 0 0 4px; font-size: 1.15rem; }
+.ajustes-card > .muted { margin: 0 0 14px; }
+.ajustes-name { max-width: 320px; }
+.ajustes-name .input { font-size: 1.05rem; }
+
+/* Tarjetas de selección de estilo, en Personalización */
+.style-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; }
+.style-card {
+  display: flex; flex-direction: column; gap: 8px; padding: 14px; text-align: left;
+  border: 2px solid var(--line-2); border-radius: 14px; background: var(--surface); color: var(--ink);
+}
+.style-card:hover { border-color: var(--ink-3); }
+.style-card[aria-checked="true"] { border-color: var(--blue); box-shadow: 0 0 0 3px color-mix(in srgb, var(--blue) 25%, transparent); }
+.style-swatch { display: flex; align-items: flex-end; gap: 4px; padding: 6px; height: 44px; border-radius: 9px; border: 1px solid rgba(0, 0, 0, .1); }
+.style-swatch span { flex: 1; height: 60%; border-radius: 5px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .08); }
+.style-swatch span:last-child { height: 85%; }
+.style-name { font-weight: 700; }
+.style-desc { font-size: .85rem; color: var(--ink-2); line-height: 1.35; }

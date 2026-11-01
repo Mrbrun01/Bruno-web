@@ -1,0 +1,195 @@
+/* =========================================================
+   EL TAPETE · estilos del juego
+   Se cargan DENTRO de un shadow root (el-tapete.js), así que sus clases
+   (.card, .btn, .chip…) no chocan con las compartidas. A cambio, aquí se
+   replica el lenguaje visual de Bruno usando SOLO las variables del tema
+   compartido (--surface, --ink, --line, --hi, --blue…), que se heredan al
+   shadow root: el juego sigue solo el estilo y el tema que elija la persona.
+   ========================================================= */
+[hidden] { display: none !important; }
+:host {
+  display: block;
+  font: 16px/1.5 var(--font-ui);
+  color: var(--ink);
+  --cw: clamp(50px, 13vw, 74px);
+  /* Cartas: siempre claras, como el papel; los palos rojos no cambian con el tema oscuro */
+  --tp-face: #FFFFFF;
+  --tp-face-ink: #171C33;
+  --tp-suit-red: #C42F26;
+}
+*, *::before, *::after { box-sizing: border-box; }
+a { color: inherit; }
+h1, h2, h3 { margin: 0; font-weight: 750; letter-spacing: -.02em; line-height: 1.15; text-wrap: balance; }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+
+/* ---------- Inicio: tarjetas de cada mesa ---------- */
+.intro { margin: 0 0 18px; max-width: 64ch; color: var(--ink-2); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 270px), 1fr)); gap: 12px; }
+.tile {
+  display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 16px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  color: var(--ink); text-decoration: none;
+  transition: border-color .12s, transform .12s;
+}
+.tile:hover { border-color: var(--ink); transform: translateY(-2px); }
+.tile .sample {
+  display: flex; align-items: flex-start; --cw: 54px;
+  min-height: calc(var(--cw) * 1.4 + 22px); padding: 12px 16px 10px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2);
+}
+.tile .sample .card { margin-right: -14px; transform: rotate(var(--r, 0deg)); transform-origin: 50% 100%; }
+.tile h2 { font-size: 1.2rem; }
+.tile p { margin: 0; color: var(--ink-2); font-size: .92rem; line-height: 1.4; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; }
+.tag { padding: 3px 10px; border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface-2); color: var(--ink-2); font-size: .8rem; font-weight: 600; }
+
+/* ---------- Cabecera de cada mesa ---------- */
+.game-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 24px; padding-block: 4px 16px; }
+.game-head h2 { font-size: 1.5rem; }
+.game-head p { margin: 6px 0 0; max-width: 62ch; color: var(--ink-3); }
+.seg { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+.seg .lbl { margin-right: 6px; color: var(--ink-3); font-size: .76rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+/* ---------- Mesa: una tarjeta como las del resto de la web ---------- */
+.felt { padding: clamp(12px, 3vw, 24px); border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); color: var(--ink); }
+.felt-inner { padding: clamp(2px, 1vw, 8px); display: flex; flex-direction: column; gap: 18px; }
+
+/* ---------- Botones (mismos que .btn compartido) ---------- */
+.btn {
+  appearance: none; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 40px; padding: 0 16px;
+  border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); color: var(--ink);
+  font-weight: 600; line-height: 1.1;
+  transition: background-color .12s, border-color .12s, transform .06s;
+}
+.btn:hover:not(:disabled) { background: var(--surface-2); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn.primary { background: var(--hi); color: var(--hi-ink); border-color: transparent; }
+.btn.primary:hover:not(:disabled) { background: var(--hi); filter: brightness(.94); }
+.btn.sm { min-height: 34px; padding: 0 12px; font-size: .9rem; }
+.btn.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.btn.on:hover:not(:disabled) { background: var(--ink); }
+.btn.danger { color: var(--red); }
+.btn.danger:hover:not(:disabled) { border-color: var(--red); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ---------- Texto ---------- */
+.msg { min-height: 1.6em; font-size: 1.15rem; font-weight: 650; letter-spacing: -.01em; text-wrap: balance; }
+.sub { color: var(--ink-3); font-size: .9rem; }
+.label { color: var(--ink-3); font-size: .76rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; line-height: 1.2; }
+.num { font-weight: 750; font-variant-numeric: tabular-nums; }
+
+/* ---------- Cartas ---------- */
+.cards { display: flex; flex-wrap: wrap; gap: 6px; min-height: calc(var(--cw) * 1.4); align-items: flex-start; }
+.card {
+  width: var(--cw); aspect-ratio: 5/7; flex: none; display: block; position: relative; padding: 0;
+  background: var(--tp-face); color: var(--tp-face-ink);
+  border: 1px solid rgba(23, 28, 51, .3); border-radius: 8px;
+  box-shadow: 0 2px 0 rgba(23, 28, 51, .16), 0 8px 12px -8px rgba(23, 28, 51, .45);
+  user-select: none; font-family: var(--font-ui);
+}
+.card.fresh { animation: deal .32s ease-out both; }
+@keyframes deal { from { transform: translateY(-16px) scale(.96); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .card.fresh { animation: none; } .tile { transition: none; } }
+.card.fr.red { color: var(--tp-suit-red); }
+.card .corner { position: absolute; top: 4px; left: 5px; font-weight: 800; font-size: calc(var(--cw) * .27); line-height: 1; text-align: center; }
+.card .corner.br { top: auto; left: auto; bottom: 4px; right: 5px; transform: rotate(180deg); }
+.card.fr .pip { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--cw) * .56); }
+.card.es .art { position: absolute; inset: 18% 20% 26%; display: grid; place-items: center; }
+.card.es .art svg { width: 100%; height: 100%; }
+.card.es .name { position: absolute; left: 0; right: 0; bottom: 6px; text-align: center; font-weight: 800; font-size: calc(var(--cw) * .17); letter-spacing: .06em; text-transform: uppercase; color: #4A3A1C; }
+.card.back {
+  background: repeating-linear-gradient(45deg, var(--blue) 0 6px, color-mix(in srgb, var(--blue) 78%, #000) 6px 12px);
+  border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px rgba(23, 28, 51, .3), 0 8px 12px -8px rgba(23, 28, 51, .45);
+}
+.card.slot { background: var(--surface-2); border: 1px dashed var(--line-2); box-shadow: none; }
+button.card { cursor: pointer; transition: transform .12s; }
+button.card:hover:not(:disabled) { transform: translateY(-8px); }
+button.card:disabled { cursor: default; }
+.card.dim { opacity: .4; }
+.card.win { box-shadow: 0 0 0 2px var(--ink), 0 0 0 5px var(--hi); }
+
+/* ---------- Fichas de apuesta (colores de los juegos de mesa de Bruno) ---------- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  appearance: none; cursor: pointer; padding: 0; width: 46px; height: 46px; border-radius: 50%;
+  border: 3px dashed rgba(255, 255, 255, .85); background: var(--ink);
+  display: grid; place-items: center; color: #FFFFFF; font-size: .85rem; font-weight: 800; line-height: 1;
+  box-shadow: 0 2px 0 rgba(23, 28, 51, .35); transition: transform .12s;
+}
+.chip:disabled { opacity: .35; cursor: not-allowed; }
+.chip:hover:not(:disabled) { transform: translateY(-2px); }
+.chip.c5 { background: var(--p2); }
+.chip.c25 { background: var(--p3); }
+.chip.c100 { background: var(--p1); }
+
+/* ---------- Asientos ---------- */
+.seats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; }
+.seat { display: flex; flex-direction: column; gap: 10px; min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.seat.active { border-color: var(--ink); box-shadow: 0 0 0 2px var(--hi); }
+.seat.out { opacity: .5; }
+.seat-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.seat-top strong { font-size: 1.05rem; font-weight: 750; }
+.badge { padding: 3px 9px; border-radius: 999px; background: var(--hi-soft); color: var(--ink); font-size: .76rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; white-space: nowrap; }
+.badge.good { background: var(--ok-bg); color: var(--ok); }
+.badge.bad { background: var(--bad-bg); color: var(--bad); }
+.rowline { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+/* ---------- Tute ---------- */
+.tute-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+.scorebar { display: flex; flex-wrap: wrap; gap: 10px 28px; align-items: center; justify-content: space-between; }
+.stat { display: flex; flex-direction: column; gap: 2px; }
+.stat .num { font-size: 1.5rem; letter-spacing: -.02em; }
+.trump { display: flex; gap: 12px; align-items: center; }
+.table-mid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.slotcol { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.logbox { display: flex; flex-direction: column; gap: 2px; max-height: 7.5em; overflow: auto; color: var(--ink-3); font-size: .88rem; }
+
+/* ---------- Póker ---------- */
+.board { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-2); }
+.board .cards { justify-content: center; min-height: calc(var(--cw) * 1.4); }
+.pot { font-size: 1.4rem; font-weight: 750; letter-spacing: -.02em; }
+.raise { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.raise input[type=range] { accent-color: var(--blue); width: min(260px, 100%); }
+
+/* ---------- Reglas ---------- */
+details.rules { margin-top: 20px; padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+details.rules summary { cursor: pointer; font-weight: 700; color: var(--ink); }
+details.rules p, details.rules li { max-width: 70ch; color: var(--ink-2); font-size: .95rem; }
+details.rules ul { margin: 8px 0 0; padding-left: 1.2em; }
+
+/* ---------- Configuración, cambio de turno y solitario ---------- */
+.setup { display: flex; flex-direction: column; gap: 16px; }
+.setup h2 { font-size: 1.4rem; }
+.setup-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.setup-input {
+  flex: 1 1 140px; min-width: 0; max-width: 220px; min-height: 42px; padding: 8px 12px;
+  border: 1px solid var(--line-2); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit;
+}
+.setup-input::placeholder { color: var(--ink-3); }
+.setup-input:focus { outline: 3px solid color-mix(in srgb, var(--blue) 40%, transparent); outline-offset: 0; border-color: var(--blue); }
+.setup-name { flex: 1 1 140px; font-size: 1.05rem; font-weight: 700; }
+.cover { display: flex; flex-direction: column; gap: 10px; align-items: center; padding: 20px; text-align: center; border: 2px dashed var(--line-2); border-radius: 12px; background: var(--surface-2); }
+.cover strong { font-size: 1.3rem; font-weight: 750; letter-spacing: -.02em; }
+.solwrap { container-type: inline-size; width: 100%; max-width: 680px; margin: 0 auto; }
+.solboard { --cw: 12vw; display: flex; flex-direction: column; gap: clamp(10px, 2.5vw, 22px); }
+@supports (width: 1cqw) { .solboard { --cw: calc((100cqw - 36px) / 7); } }
+.solrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; align-items: start; }
+.solboard .card { width: 100%; }
+.scell, .tcol { min-width: 0; cursor: pointer; }
+.sc { cursor: pointer; }
+.sc.ou { margin-top: -118%; }
+.sc.od { margin-top: -126%; }
+.card.sel { box-shadow: 0 0 0 2px var(--ink), 0 0 0 5px var(--hi); transform: translateY(-3px); }
+.card.slot.ghost { display: grid; place-items: center; font-size: calc(var(--cw) * .5); color: var(--line-2); }
+.card.slot.recycle { display: grid; place-items: center; font-size: calc(var(--cw) * .5); color: var(--ink-2); }
+footer { margin-top: 28px; color: var(--ink-3); font-size: .88rem; }
+@media (max-width: 520px) { .chip { width: 44px; height: 44px; } .table-mid { gap: 14px; } }
+
+/* ---------- Estilo «Board» (el-tapete.js copia html[data-style] al anfitrión) ---------- */
+:host([data-style="board"]) .btn,
+:host([data-style="board"]) .setup-input { border-radius: 8px; box-shadow: none; }
+:host([data-style="board"]) .btn.primary { font-weight: 600; }

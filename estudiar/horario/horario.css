@@ -1,0 +1,39 @@
+/* =========================================================
+   HORARIO
+   ========================================================= */
+/* Estilo «Board» (se activa con html[data-style="board"]) */
+html[data-style="board"] .day.is-today { box-shadow: none; border-color: var(--hi); }
+
+.h-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px; margin-bottom: 16px; }
+.h-form .field { flex: 0 1 170px; }
+.h-form .field.grow { flex: 1 1 240px; }
+.h-form.editing { border-color: var(--blue); }
+.h-actions { display: flex; gap: 8px; }
+.h-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
+.h-tools .input { flex: 1 1 260px; max-width: 420px; }
+.h-spacer { flex: 1 1 0; min-width: 0; }
+.h-menu-wrap { position: relative; }
+.h-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 5;
+  display: flex; flex-direction: column; gap: 2px; min-width: 200px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--line-2); border-radius: 10px; box-shadow: var(--shadow);
+}
+.h-menu .btn { justify-content: flex-start; border: 0; background: transparent; }
+.h-menu .btn:hover { background: var(--surface-2); }
+@media (max-width: 560px) { .h-spacer { display: none; } }
+.week { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; align-items: start; }
+.day { padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.day.is-today { border-color: var(--ink); box-shadow: inset 0 4px 0 var(--hi); padding-top: 18px; }
+.day header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.day h2 { margin: 0; font-size: 1.1rem; letter-spacing: -.01em; }
+.day > p { margin: 0; padding: 6px 0 4px; font-size: .92rem; }
+.slots { margin: 0; padding: 0; list-style: none; }
+.slot { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.slot:first-child { border-top: 0; }
+.slot time { font-weight: 700; min-width: 3.2em; }
+.slot-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.slot-tools { display: flex; opacity: .35; }
+.slot:hover .slot-tools, .slot:focus-within .slot-tools, .slot.is-editing .slot-tools { opacity: 1; }
+.slot.is-editing { background: var(--hi-soft); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 8px; }
+.icon-btn.sm { width: 32px; height: 32px; }
+@media (hover: none) { .slot-tools { opacity: 1; } }

@@ -1,0 +1,21 @@
+/* =========================================================
+   TRES EN RAYA
+   ========================================================= */
+/* Estilo «Board» (se activa con html[data-style="board"]) */
+html[data-style="board"] .ttt-cell.win { background: var(--hi-soft); }
+
+.ttt { display: grid; grid-template-columns: minmax(0, 1fr) 230px; gap: 24px; align-items: start; }
+.ttt-main { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.ttt-status { min-height: 1.6em; margin: 0; font-size: 1.2rem; font-weight: 700; }
+.ttt-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: min(100%, 360px); }
+.ttt-cell { aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--line-2); border-radius: 14px; background: var(--surface); font-size: clamp(2.4rem, 12vw, 3.6rem); font-weight: 800; line-height: 1; box-shadow: 0 2px 0 var(--line-2); transition: background-color .12s; }
+.ttt-cell:hover:not(:disabled) { background: var(--surface-2); }
+.ttt-cell:disabled { cursor: default; }
+.ttt-cell.p-x { color: var(--red); } .ttt-cell.p-o { color: var(--blue); }
+.ttt-cell.win { background: var(--hi); border-color: transparent; }
+.ttt-cell.win.p-x, .ttt-cell.win.p-o { color: var(--hi-ink); }
+.ttt-score h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.ttt-score p { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 8px; }
+.ttt-score b { font-size: 1.6rem; }
+.p-x { color: var(--red); font-weight: 800; } .p-o { color: var(--blue); font-weight: 800; }
+@media (max-width: 720px) { .ttt { grid-template-columns: minmax(0, 1fr); } }

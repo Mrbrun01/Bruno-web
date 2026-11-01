@@ -1,0 +1,79 @@
+/* =========================================================
+   INICIO
+   ========================================================= */
+/* Estilo «Board» (se activa con html[data-style="board"]) */
+html[data-style="board"] .today-card,
+html[data-style="board"] .link-card {
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+html[data-style="board"] .clock-note { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); transform: none; }
+html[data-style="board"] .tile:hover { border-color: var(--hi); }
+html[data-style="board"] .tile:hover .tile-ico { background: var(--hi-soft); color: var(--hi); }
+
+/* =========================================================
+   INICIO
+   ========================================================= */
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 36px; align-items: center; margin-bottom: 36px; }
+.hero-date { margin: 0 0 8px; color: var(--ink-2); font-weight: 600; }
+.hero-title { margin: 0 0 24px; font-size: clamp(2.3rem, 1.2rem + 3.8vw, 4rem); font-weight: 780; letter-spacing: -.04em; line-height: 1.02; }
+.hero-title:focus { outline: none; }
+
+/* La hora vive en una nota adhesiva: el subrayador del cuaderno */
+.clock-note {
+  padding: 22px 30px 20px; border-radius: 8px;
+  background: var(--hi); color: var(--hi-ink);
+  transform: rotate(1.6deg);
+  box-shadow: 0 2px 3px rgba(23, 28, 51, .12), 0 18px 34px -14px rgba(23, 28, 51, .4);
+}
+.clock-row { display: flex; align-items: baseline; gap: 10px; }
+.clock-time { font-size: clamp(3.6rem, 2rem + 5.4vw, 6.4rem); font-weight: 800; letter-spacing: -.04em; line-height: 1; }
+.clock-sec { font-size: 1.7rem; font-weight: 700; opacity: .65; }
+.clock-sec .dg { width: .64em; }
+
+.today { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 44px; }
+.today-card { padding: 18px 20px; cursor: pointer; transition: border-color .12s, transform .12s; }
+.today-card:hover { border-color: var(--ink); transform: translateY(-2px); }
+.today-card:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+.today-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.today-head h2 { margin: 0; font-size: 1.1rem; letter-spacing: -.01em; }
+.today-link { font-size: .88rem; font-weight: 600; color: var(--blue); }
+.mini-list { display: grid; gap: 9px; margin: 0; padding: 0; list-style: none; }
+.mini-list li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.mini-list li > span:not(.chip) { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-list time { font-weight: 700; min-width: 3.2em; }
+.mini-list .past { color: var(--ink-3); }
+.mini-list .dot { width: 11px; height: 11px; flex: none; border-radius: 50%; }
+.today-card > p { margin: 0; }
+
+.block { margin-bottom: 44px; }
+.block-title { margin: 0 0 4px; font-size: 1.6rem; font-weight: 750; letter-spacing: -.03em; }
+.group-title { margin: 24px 0 10px; color: var(--ink-3); font-size: .95rem; font-weight: 600; }
+
+.tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.tile {
+  display: flex; align-items: center; gap: 14px; padding: 14px 16px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  color: var(--ink); text-decoration: none;
+  transition: border-color .12s, transform .12s;
+}
+.tile:hover { border-color: var(--ink); transform: translateY(-2px); }
+.tile-ico { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border-radius: 11px; background: var(--surface-2); font-size: 1.3rem; transition: background-color .12s; }
+.tile:hover .tile-ico { background: var(--hi); color: var(--hi-ink); }
+.tile-txt { display: flex; flex-direction: column; min-width: 0; }
+.tile-txt b { font-weight: 700; }
+.tile-txt small { color: var(--ink-2); font-size: .86rem; line-height: 1.3; }
+
+.link-groups { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin-top: 12px; }
+.link-card { padding: 16px 16px 10px; box-shadow: none; }
+.link-card h3 { margin: 0 0 6px; padding: 0 4px; font-size: 1rem; }
+.link-list { margin: 0; padding: 0; list-style: none; }
+.link-list a { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 6px; border-radius: 8px; color: var(--ink); text-decoration: none; }
+.link-list a:hover { background: var(--surface-2); }
+.link-list .ext { color: var(--ink-3); opacity: 0; }
+.link-list a:hover .ext, .link-list a:focus-visible .ext { opacity: 1; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 26px; }
+  .clock-note { justify-self: start; transform: rotate(-1deg); padding: 16px 22px 14px; }
+}
